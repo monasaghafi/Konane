@@ -93,5 +93,53 @@ class Board():
         """
         return self.valid(row,col) and self.game_board[row][col].piece == symbol
 
+    def get_connected_groups(self, color):
+        """
+        Returns a list of lists, where each inner list contains coordinates of tiles belonging to the same connected group
+        as the tile at position (i,j)
+        """
+        groups = []
+        visited = set()
+
+        for i in range(self.size):
+            for j in range(self.size):
+                tile = self.game_board[i][j]
+
+                if tile.piece == color and (i, j) not in visited:
+                    # found a new group - use DFS to find all tiles belonging to this group
+                    group = self._dfs_connected_group(color, i, j, visited)
+                    groups.append(group)
+
+        return groups
+
+    def _dfs_connected_group(self, color, i, j, visited):
+        """
+        Helper function for get_connected_groups method - performs DFS to find all tiles belonging to the group
+        containing the tile at position (i,j).
+        """
+        queue = [(i, j)]
+        group = []
+
+        while queue:
+            x, y = queue.pop(0)
+            tile = self.game_board[x][y]
+
+            if tile.piece == color and (x, y) not in visited:
+                # add tile to current group and mark as visited
+                group.append((x, y))
+                visited.add((x, y))
+
+                # add neighbors to queue
+                if x > 0:
+                    queue.append((x - 1, y))
+                if x < self.size - 1:
+                    queue.append((x + 1, y))
+                if y > 0:
+                    queue.append((x, y - 1))
+                if y < self.size - 1:
+                    queue.append((x, y + 1))
+
+        return group
+
 
 

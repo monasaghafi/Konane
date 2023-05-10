@@ -2,7 +2,7 @@ from Tile import Tile
 
 class KonaneGame:
     def __init__(self):
-        NotImplemented
+        self.hash_table = {}
 
         
     def initialize_board(self, board_size):
@@ -127,17 +127,97 @@ class KonaneGame:
         """
         return Tile.P_Black if tile == Tile.P_White else Tile.P_White
 
+    def evaluate(self, board, color, terminal_value=0):
 
-    def evaluate(self, board, color, terminal_value = 0):
-        
-        value = 0
+        # Check if board state already exists in hash table
+        board_repr = self.get_board_representation(board, color)
+        if board_repr in self.hash_table:
+            return self.hash_table[board_repr]
+
+        """
+        To improve the evaluate function, we can consider the following factors:
+
+            1.Piece count: The more pieces a player has on the board, the better their position.
+            2.Mobility: The more moves a player has available, the better their position.
+            3.Connectivity: The more connected a player's pieces are to each other, the better their position.
+            4.Corners: Controlling the corners of the board is advantageous.
+            5.Center: Controlling the center of the board is advantageous.
+        """
+
+        """ Piece count factor """
+        my_pieces = 0
+        opponent_pieces = 0
+        for row in board.game_board:
+            for tile in row:
+                if tile.piece == color:
+                    my_pieces += 1
+                elif tile.piece == self.opponent(color):
+                    opponent_pieces += 1
+
+        piece_count_factor = (my_pieces - opponent_pieces) * 10
+
+        """ Mobility factor """
         valid_moves_color = self.generate_all_possible_moves(board, color)
         valid_moves_opponent = self.generate_all_possible_moves(board, self.opponent(color))
 
-        value += (10 * len(valid_moves_color))
-        value -= (10 * len(valid_moves_opponent))
+        mobility_factor = (len(valid_moves_color) - len(valid_moves_opponent)) * 10
 
-        value += terminal_value
+        """ Connectivity factor """
+        my_connected_groups = board.get_connected_groups(color)
+        opponent_connected_groups = board.get_connected_groups(self.opponent(color))
+
+        connectivity_factor = (len(my_connected_groups) - len(opponent_connected_groups)) * 10
+
+        """ Corner factor """
+        my_corners = 0
+        opponent_corners = 0
+        corner_positions = [(0, 0), (0, board.size - 1), (board.size - 1, 0), (board.size - 1, board.size - 1)]
+        for pos in corner_positions:
+            tile = board.game_board[pos[0]][pos[1]]
+            if tile.piece == color:
+                my_corners += 1
+            elif tile.piece == self.opponent(color):
+                opponent_corners += 1
+
+        corner_factor = (my_corners - opponent_corners) * 100
+
+        """ Center factor  """
+        center_tile = board.game_board[board.size // 2][board.size // 2]
+        my_center = 1 if center_tile.piece == color else 0
+        opponent_center = 1 if center_tile.piece == self.opponent(color) else 0
+
+        center_factor = (my_center - opponent_center) * 10
+
+        value = piece_count_factor + mobility_factor + connectivity_factor + corner_factor + center_factor
+
+        # Add board state and score to hash table
+        self.hash_table[board_repr] = value
 
         return value
+
+    def get_board_representation(self, board, color):
+        # Generate a unique string representation of the board state
+        pieces = ""
+        for row in board.game_board:
+            for tile in row:
+                if tile.piece == Tile.P_Black:
+                    pieces += "B"
+                elif tile.piece == Tile.P_White:
+                    pieces += "W"
+                else:
+                    pieces += "_"
+        return pieces + str(color)
+    """
+     the KonaneGame class now has a hash_table attribute that is initialized as an empty dictionary 
+     in the constructor. The evaluate method first checks if the board state already exists in the hash table 
+     by generating its unique representation using the get_board_representation method. 
+     If it does exist, the corresponding score is returned from the hash table.
+     If it doesn't exist, the evaluation score is calculated and added to the hash table 
+     with its corresponding board state representation as the key. 
+     The get_board_representation method generates a string representation of the board state 
+     by concatenating the symbols for each piece on the board (B for black, W for white, and _ for an empty tile)
+     along with the current player's color. This ensures that identical board states with different players
+     will have different representations and be treated separately in the hash table.
+     """
+
 

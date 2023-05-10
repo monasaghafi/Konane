@@ -14,15 +14,13 @@ class PlayGame:
         size = 6
         game = KonaneGame()
         initial_board = Board(size, game.initialize_board(size))
-        agent1 = Agent(game, color=Tile.P_Black, max_depth=4)
-        agent2 = Agent(game, color=Tile.P_White, max_depth=2)
+        agent1 = Agent(game, color=Tile.P_Black, max_depth=8)
+        agent2 = Agent(game, color=Tile.P_White, max_depth=5)
         # bot vs bot
         play = PlayKonane(initial_board, game, agent1=agent1, agent2=agent2)
 
         # player vs bot
         #play = PlayKonane(initial_board, game, agent1=agent2)
-    
-
 
 
 if __name__ == '__main__':
